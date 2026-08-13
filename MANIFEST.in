@@ -1,0 +1,11 @@
+include CMakeLists.txt
+include README.md
+include LICENSE
+include VERSION.txt
+
+recursive-include src *.cpp *.c *.cc *.cxx
+recursive-include include *.h *.hpp
+recursive-include bindings *.cpp *.h *.hpp
+recursive-include fractalich *.py
+recursive-include examples *.py
+recursive-include tests *.py

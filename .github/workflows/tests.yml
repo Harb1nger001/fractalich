@@ -1,0 +1,94 @@
+name: Build and Test Fractalich
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    name: Windows / Python ${{ matrix.python-version }}
+
+    runs-on: windows-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version:
+          - "3.11"
+          - "3.12"
+          - "3.13"
+          - "3.14"
+
+    steps:
+
+      # -------------------------------------------------------
+      # Checkout repository
+      # -------------------------------------------------------
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+
+      # -------------------------------------------------------
+      # Set up Python
+      # -------------------------------------------------------
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+
+      # -------------------------------------------------------
+      # Install build dependencies
+      # -------------------------------------------------------
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install numpy pytest
+          python -m pip install build setuptools wheel
+
+
+      # -------------------------------------------------------
+      # Check CMake
+      # -------------------------------------------------------
+
+      - name: Check CMake
+        run: cmake --version
+
+
+      # -------------------------------------------------------
+      # Build Fractalich
+      # -------------------------------------------------------
+
+      - name: Build Fractalich
+        run: |
+          python -m build --wheel
+
+
+      # -------------------------------------------------------
+      # Install generated wheel
+      # -------------------------------------------------------
+
+      - name: Install Fractalich
+        shell: pwsh
+        run: |
+          $wheel = Get-ChildItem dist\*.whl | Select-Object -First 1
+          pip install $wheel.FullName
+
+
+      # -------------------------------------------------------
+      # Run tests
+      # -------------------------------------------------------
+
+      - name: Run tests
+        run: |
+          pytest -v

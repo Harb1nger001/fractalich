@@ -1,0 +1,29 @@
+[build-system]
+requires = [
+    "setuptools>=68",
+    "wheel",
+    "cmake>=3.18"
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fractalich"
+version = "0.1.0"
+description = "Fractal-Based Data Analysis Library with C++ backend"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+
+keywords = [
+    "fractal",
+    "data-analysis",
+    "machine-learning",
+    "neural-network"
+]
+
+dependencies = [
+    "numpy>=1.21"
+]
+
+[project.urls]
+Homepage = "https://github.com/fractalich"
