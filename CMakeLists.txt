@@ -1,4 +1,3 @@
-```cmake
 cmake_minimum_required(VERSION 3.18)
 
 project(Fractalich VERSION 0.1.0 LANGUAGES CXX)
@@ -68,4 +67,3 @@ install(
     LIBRARY DESTINATION fractalich
     RUNTIME DESTINATION fractalich
 )
-```
