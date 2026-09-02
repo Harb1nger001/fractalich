@@ -334,12 +334,14 @@ Matrix snnft_build_adjacency(int n, const SNNFTConfig& cfg, unsigned seed) {
         for (int j = 0; j < n; ++j) A[i][j] += noise(rng);
     }
     // IFS scaling: A = sum_r a_r * P_r * S_sr(A) * P_r^T + E
+    std::vector<int> perm(n);
+    std::iota(perm.begin(), perm.end(), 0);
     for (int r = 0; r < cfg.num_ifs_terms; ++r) {
         double ar = 0.5 / cfg.num_ifs_terms;
-        std::shuffle(std::vector<int>(n).begin(), std::vector<int>(n).end(), rng); // permutation P_r stub
+        std::shuffle(perm.begin(), perm.end(), rng);
         for (int i = 0; i < n; ++i)
             for (int j = 0; j < n; ++j)
-                A[i][j] += ar * A[std::min(i * 2, n - 1)][std::min(j * 2, n - 1)];
+                A[perm[i]][perm[j]] += ar * A[std::min(i * 2, n - 1)][std::min(j * 2, n - 1)];
     }
     // Normalise rows
     for (int i = 0; i < n; ++i) {

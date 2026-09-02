@@ -30,4 +30,4 @@ target_link_libraries(fractalich_ext PRIVATE fractalich_core)
 target_include_directories(fractalich_ext PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 # Install the extension into the Python package folder
-install(TARGETS fractalich_ext DESTINATION fractalich)
+install(TARGETS fractalich_ext DESTINATION .)

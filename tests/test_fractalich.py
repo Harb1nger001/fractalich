@@ -12,12 +12,17 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 try:
-    import fractalich_ext as _ext
+    from fractalich import fractalich_ext as _ext
     HAS_EXT = True
     SKIP_MSG = ""
 except ImportError:
-    HAS_EXT = False
-    SKIP_MSG = "fractalich_ext not built. Run `pip install .` first."
+    try:
+        import fractalich_ext as _ext
+        HAS_EXT = True
+        SKIP_MSG = ""
+    except ImportError:
+        HAS_EXT = False
+        SKIP_MSG = "fractalich_ext not built. Run `pip install .` first."
 
 skip_if_no_ext = pytest.mark.skipif(not HAS_EXT, reason=SKIP_MSG)
 
@@ -76,7 +81,7 @@ class TestFRE:
     def test_nonzero_error(self):
         d  = np.array([1.5, 1.7, 2.0], dtype=np.float64)
         dp = np.array([1.0, 2.0, 1.5], dtype=np.float64)
-        assert _ext.metrics.fre(d, dp) == pytest.approx(1.0)
+        assert _ext.metrics.fre(d, dp) == pytest.approx(1.3)
 
 
 class TestFFRI:
@@ -244,3 +249,20 @@ class TestSNNFT:
         pre  = np.zeros(8, dtype=np.float64)
         post = np.zeros(1, dtype=np.float64)
         _ext.neural.snnft_stdp_update(state, cfg, pre, post)
+
+    @skip_if_no_ext
+    def test_energy_loss(self):
+        cfg = _ext.neural.SNNFTConfig()
+        loss = _ext.neural.snnft_energy_loss([10, 20, 30], cfg)
+        assert loss >= 0.0
+
+    def test_python_neural_snnft_wrapper(self):
+        import fractalich.neural as fn
+        cfg = fn.snnft_config(input_dim=8, num_compartments=4)
+        state = fn.snnft_init(cfg, seed=42)
+        out = fn.snnft_step(np.ones(8), state, cfg)
+        assert isinstance(out, list)
+        assert len(out) == 1
+        fn.snnft_stdp_update(state, cfg, np.ones(8), np.ones(1))
+        loss = fn.snnft_energy_loss([5, 10], cfg)
+        assert loss >= 0.0

@@ -49,15 +49,33 @@ class CMakeBuild(build_ext):
         print(f"Install directory: {ext_dir}")
         print("=" * 70)
 
+        import shutil
+        cmake_cmd = shutil.which("cmake")
+        if not cmake_cmd and platform.system() == "Windows":
+            candidates = [
+                r"C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe",
+                r"C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe",
+                r"C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe",
+                r"C:\Program Files\Microsoft Visual Studio\2022\Professional\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe",
+                r"C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe",
+                r"C:\Program Files\CMake\bin\cmake.exe",
+            ]
+            for c in candidates:
+                if os.path.isfile(c):
+                    cmake_cmd = c
+                    break
+        if not cmake_cmd:
+            cmake_cmd = "cmake"
+
         # Configure
         subprocess.check_call(
-            ["cmake", source_dir] + cmake_args,
+            [cmake_cmd, source_dir] + cmake_args,
             cwd=build_dir,
         )
 
         # Build + install
         subprocess.check_call(
-            ["cmake", "--build", ".", "--target", "install"] + build_args,
+            [cmake_cmd, "--build", ".", "--target", "install"] + build_args,
             cwd=build_dir,
         )
 
