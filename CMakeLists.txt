@@ -64,6 +64,6 @@ target_include_directories(
 # the fractalich package directory, NOT fractalich/fractalich/.
 install(
     TARGETS fractalich_ext
-    LIBRARY DESTINATION fractalich
-    RUNTIME DESTINATION fractalich
+    LIBRARY DESTINATION .
+    RUNTIME DESTINATION .
 )
