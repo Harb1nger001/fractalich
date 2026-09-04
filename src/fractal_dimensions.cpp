@@ -28,7 +28,22 @@ double log_log_slope(const std::vector<double>& xs, const std::vector<double>& y
         double lx = std::log(xs[i]), ly = std::log(ys[i]);
         sx += lx; sy += ly; sxx += lx * lx; sxy += lx * ly;
     }
-    return (N * sxy - sx * sy) / (N * sxx - sx * sx);
+    double denom = N * sxx - sx * sx;
+    if (std::abs(denom) < 1e-15) return 0.0;
+    return (N * sxy - sx * sy) / denom;
+}
+
+// Least-squares linear slope of y vs x
+double linear_slope(const std::vector<double>& xs, const std::vector<double>& ys) {
+    assert(xs.size() == ys.size() && !xs.empty());
+    int N = static_cast<int>(xs.size());
+    double sx = 0, sy = 0, sxx = 0, sxy = 0;
+    for (int i = 0; i < N; ++i) {
+        sx += xs[i]; sy += ys[i]; sxx += xs[i] * xs[i]; sxy += xs[i] * ys[i];
+    }
+    double denom = N * sxx - sx * sx;
+    if (std::abs(denom) < 1e-15) return 0.0;
+    return (N * sxy - sx * sy) / denom;
 }
 
 double signal_mean(const std::vector<double>& v) {
@@ -179,7 +194,7 @@ double information_dim(const std::vector<double>& signal, int num_bins) {
     std::vector<double> neg_log_eps(epsilons.size());
     for (std::size_t i = 0; i < epsilons.size(); ++i)
         neg_log_eps[i] = -std::log(epsilons[i]);
-    return log_log_slope(neg_log_eps, ID);
+    return linear_slope(neg_log_eps, ID);
 }
 
 // ─── 5. Packing Dimension ─────────────────────────────────────────────────────
@@ -239,7 +254,7 @@ double renyi_dim(const std::vector<double>& signal, double q, int num_bins) {
     std::vector<double> neg_log_eps(epsilons.size());
     for (std::size_t i = 0; i < epsilons.size(); ++i)
         neg_log_eps[i] = -std::log(epsilons[i]);
-    return log_log_slope(neg_log_eps, Rq);
+    return linear_slope(neg_log_eps, Rq);
 }
 
 // ─── 9. Higuchi's Fractal Dimension ──────────────────────────────────────────

@@ -1,110 +1,127 @@
 """
 Fractalich Quick-Start Example
 ================================
-Run after building: pip install .
+Run after installing: pip install fractalich
+Or from source: pip install .
 """
 
-import numpy as np
 import sys
 import os
+import numpy as np
 
-# ─── Try to import Fractalich ─────────────────────────────────────────────────
+# Allow running directly from source directory
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+
+# ─── 1. Import Fractalich ─────────────────────────────────────────────────────
 try:
-    from fractalich import fractalich_ext as _ext
-except ImportError:
-    print("ERROR: fractalich_ext is not built. Please run: pip install .")
+    from fractalich import metrics, dimensions, neural
+    import fractalich
+except ImportError as e:
+    print(f"ERROR: Fractalich is not installed or extension not built: {e}")
+    print("Please install via: pip install fractalich  (or pip install .)")
     sys.exit(1)
 
 rng = np.random.default_rng(42)
 
-# ─── 1. Evaluation Metrics ────────────────────────────────────────────────────
-print("=" * 50)
-print("Fractalich v0.1.0 — Quick-Start Demo")
-print("=" * 50)
+print("=" * 60)
+print(f"Fractalich v{fractalich.__version__} — Comprehensive Quick-Start Demo")
+print("=" * 60)
 
+# ─── 2. Evaluation Metrics ────────────────────────────────────────────────────
+print("\n[1. Evaluation Metrics]")
 original      = rng.random(1024)
-reconstructed = original + rng.random(1024) * 0.05
+reconstructed = original + rng.normal(0, 0.05, size=1024)
 
-ffs_score = _ext.metrics.ffs(original, reconstructed)
-print(f"\n[Metrics]")
-print(f"  FFS  (perfect=1.0)  : {ffs_score:.6f}")
+# Fractal Fidelity Score (FFS)
+ffs_score = metrics.ffs(original, reconstructed)
+print(f"  FFS  (Fractal Fidelity Score)       : {ffs_score:.6f} / 1.0")
 
+# Multiscale Structural Consistency (MSC)
 scales_orig = [original[i*256:(i+1)*256] for i in range(4)]
 scales_rec  = [reconstructed[i*256:(i+1)*256] for i in range(4)]
-msc_score   = _ext.metrics.msc(scales_orig, scales_rec)
-print(f"  MSC  (perfect=1.0)  : {msc_score:.6f}")
+msc_score   = metrics.msc(scales_orig, scales_rec)
+print(f"  MSC  (Multiscale Structural Consist): {msc_score:.6f} / 1.0")
 
+# Fractal Residual Error (FRE)
 dims_meas = np.array([1.5, 1.7, 2.0])
 dims_pred = np.array([1.4, 1.8, 1.9])
-fre_score = _ext.metrics.fre(dims_meas, dims_pred)
-print(f"  FRE  (lower=better) : {fre_score:.6f}")
+fre_score = metrics.fre(dims_meas, dims_pred)
+print(f"  FRE  (Fractal Residual Error)       : {fre_score:.6f}")
 
-labels_i  = rng.integers(0, 2, size=1024).astype(np.int32)
-ffri_score = _ext.metrics.ffri(original, labels_i)
-print(f"  FFRI (higher=more relevant): {ffri_score:.6f}")
+# Fractal Feature Relevance Index (FFRI)
+labels_i   = rng.integers(0, 2, size=1024).astype(np.int32)
+ffri_score = metrics.ffri(original, labels_i, num_bins=50)
+print(f"  FFRI (Feature Relevance Index)      : {ffri_score:.6f}")
 
-rfd = rng.random(20)
-ssri_score = _ext.metrics.ssri(rfd)
-print(f"  SSRI (higher=better): {ssri_score:.6f}")
+# Self-Similarity Retention Index (SSRI)
+rfd = np.array([1.51, 1.49, 1.50, 1.52, 1.50])
+ssri_score = metrics.ssri(rfd)
+print(f"  SSRI (Self-Similarity Retention)    : {ssri_score:.6f}")
 
+# Fractal Recurrence Index (FRI)
 match_scores = rng.random(200)
-fri_score = _ext.metrics.fri(match_scores, theta=0.5)
-print(f"  FRI  (recurrence)   : {fri_score:.6f}")
+fri_score = metrics.fri(match_scores, theta=0.5)
+print(f"  FRI  (Fractal Recurrence Rate)      : {fri_score:.6f}")
 
-# ─── 2. Fractal Dimensions ────────────────────────────────────────────────────
-signal = rng.random(512)
-print(f"\n[Fractal Dimensions]")
-print(f"  Higuchi    : {_ext.dimensions.higuchi(signal, 10):.4f}")
-print(f"  Katz       : {_ext.dimensions.katz(signal):.4f}")
-print(f"  Petrosian  : {_ext.dimensions.petrosian(signal):.4f}")
-print(f"  Hurst (R/S): {_ext.dimensions.hurst(signal):.4f}")
-print(f"  DFA alpha  : {_ext.dimensions.dfa(signal):.4f}")
-print(f"  Box-Count  : {_ext.dimensions.box_counting(signal):.4f}")
-print(f"  Wavelet    : {_ext.dimensions.wavelet_dim(signal):.4f}")
-print(f"  Lacunarity : {_ext.dimensions.lacunarity(signal):.4f}")
-print(f"  Renyi(q=2) : {_ext.dimensions.renyi_dim(signal, q=2.0):.4f}")
+# ─── 3. Fractal Dimensions ────────────────────────────────────────────────────
+print("\n[2. Fractal Dimensions]")
+signal = np.cumsum(rng.standard_normal(1024))
+
+print(f"  Higuchi Dimension (k_max=16)       : {dimensions.higuchi(signal, k_max=16):.4f}")
+print(f"  Katz Waveform Dimension            : {dimensions.katz(signal):.4f}")
+print(f"  Petrosian (Zero-Crossing) Dim      : {dimensions.petrosian(signal):.4f}")
+print(f"  Hurst Exponent (R/S Persistence)   : {dimensions.hurst(signal):.4f}")
+print(f"  DFA Scaling Exponent (Alpha)       : {dimensions.dfa(signal):.4f}")
+print(f"  Box-Counting Dimension             : {dimensions.box_counting(signal):.4f}")
+print(f"  Haar Wavelet Dimension             : {dimensions.wavelet_dim(signal, num_levels=6):.4f}")
+print(f"  Spatial Lacunarity (Gappiness)     : {dimensions.lacunarity(signal, box_size=8):.4f}")
+print(f"  Renyi Generalized Dim (q=2.0)      : {dimensions.renyi_dim(signal, q=2.0):.4f}")
+
 lyapunov_exp = np.array([0.5, 0.2, -0.1, -1.0])
-print(f"  Lyapunov   : {_ext.dimensions.lyapunov_dim(lyapunov_exp):.4f}")
+print(f"  Lyapunov Dim (Kaplan-Yorke)        : {dimensions.lyapunov_dim(lyapunov_exp):.4f}")
 
-mfs = _ext.dimensions.multifractal_spectrum(signal)
-print(f"  Multifractal spectrum: {len(mfs['alpha'])} alpha values computed")
+mfs = dimensions.multifractal_spectrum(signal, q_min=-4.0, q_max=4.0, num_q=17)
+print(f"  Multifractal Spectrum Points       : {len(mfs['alpha'])} alpha values computed")
+print(f"  Singularity Spectrum Alpha Range   : [{min(mfs['alpha']):.3f}, {max(mfs['alpha']):.3f}]")
 
-# ─── 3. Neural Networks ───────────────────────────────────────────────────────
-print(f"\n[Neural Networks]")
+# ─── 4. Fractal Neural Networks ───────────────────────────────────────────────
+print("\n[3. Fractal Neural Networks]")
 
-# FDNN
-cfg_fdnn = _ext.neural.FDNNConfig()
-cfg_fdnn.input_dim = 64
-cfg_fdnn.output_dim = 8
-state_fdnn = _ext.neural.fdnn_init(cfg_fdnn, 0)
+# FDNN (Fractal-Dendritic Neural Network)
+cfg_fdnn = neural.fdnn_config(input_dim=64, branch_dim=32, output_dim=8, num_branches=4)
+state_fdnn = neural.fdnn_init(cfg_fdnn, seed=42)
 x_in = rng.random(64)
-out_fdnn = _ext.neural.fdnn_forward(x_in, state_fdnn, cfg_fdnn)
-fl = _ext.neural.fdnn_fractal_loss(x_in, state_fdnn, cfg_fdnn)
-print(f"  FDNN output (8-d): {[round(v,4) for v in out_fdnn]}")
-print(f"  FDNN fractal loss: {fl:.6f}")
+out_fdnn = neural.fdnn_forward(x_in, state_fdnn, cfg_fdnn)
+fl = neural.fdnn_fractal_loss(x_in, state_fdnn, cfg_fdnn)
+print(f"  FDNN 8-dim Output                  : {[round(v, 4) for v in out_fdnn]}")
+print(f"  FDNN Fractal Regularization Loss   : {fl:.6f}")
 
-# MSFCN
-cfg_msfcn = _ext.neural.MSFCNConfig()
-cfg_msfcn.kernel_size = 8
-cfg_msfcn.num_scales  = 4
-state_msfcn = _ext.neural.msfcn_init(cfg_msfcn, 0)
-sig_msfcn   = rng.random(128)
-out_msfcn   = _ext.neural.msfcn_forward(sig_msfcn, state_msfcn, cfg_msfcn)
-sc_loss     = _ext.neural.msfcn_scale_consistency_loss(sig_msfcn, state_msfcn, cfg_msfcn)
-print(f"  MSFCN output len : {len(out_msfcn)}")
-print(f"  MSFCN scale loss : {sc_loss:.6f}")
+# MSFCN (Multi-Scale Fractal Convolutional Network)
+cfg_msfcn = neural.msfcn_config(kernel_size=8, num_scales=4, base_scale=2.0)
+state_msfcn = neural.msfcn_init(cfg_msfcn, seed=42)
+sig_msfcn = rng.random(128)
+out_msfcn = neural.msfcn_forward(sig_msfcn, state_msfcn, cfg_msfcn)
+sc_loss = neural.msfcn_scale_consistency_loss(sig_msfcn, state_msfcn, cfg_msfcn)
+print(f"  MSFCN Feature Vector Length        : {len(out_msfcn)}")
+print(f"  MSFCN Scale Consistency Loss       : {sc_loss:.6f}")
 
-# SNN-FT
-cfg_snn = _ext.neural.SNNFTConfig()
-cfg_snn.input_dim = 16
-cfg_snn.num_compartments = 8
-state_snn = _ext.neural.snnft_init(cfg_snn, 0)
+# SNN-FT (Spiking Neural Network with Fractal Trees)
+cfg_snn = neural.snnft_config(input_dim=16, num_compartments=8)
+state_snn = neural.snnft_init(cfg_snn, seed=42)
 T = 20
 total_spikes = 0
 for t in range(T):
     inp = (rng.random(16) > 0.8).astype(np.float64)
-    out_snn = _ext.neural.snnft_step(inp, state_snn, cfg_snn)
+    out_snn = neural.snnft_step(inp, state_snn, cfg_snn)
     total_spikes += int(out_snn[0])
-print(f"  SNN-FT spikes in {T} steps: {total_spikes}")
+    neural.snnft_stdp_update(state_snn, cfg_snn, pre_spikes=inp, post_spikes=out_snn)
 
-print("\nFractalich demo complete!")
+energy_loss = neural.snnft_energy_loss([total_spikes], cfg_snn)
+print(f"  SNN-FT Output Spikes in {T} Steps   : {total_spikes}")
+print(f"  SNN-FT Energy Regularization Loss  : {energy_loss:.6f}")
+
+print("\n" + "=" * 60)
+print("Fractalich quickstart demo completed successfully!")
+print("=" * 60)
